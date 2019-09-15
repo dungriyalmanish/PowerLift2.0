@@ -1,0 +1,10 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="stroke_size">3dp</dimen>
+    <dimen name="heading">20sp</dimen>
+    <dimen name="weight_text">10sp</dimen>
+    <dimen name="text_margin_start">20dp</dimen>
+    <dimen name="drawable_padding">10dp</dimen>
+    <dimen name="tick_view_dimen">50dp</dimen>
+    <dimen name="timer_size">40sp</dimen>
+</resources>
