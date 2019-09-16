@@ -7,21 +7,29 @@ import android.content.Context;
 import android.util.Log;
 
 import com.manish.powerlift.db.Exercise;
+import com.manish.powerlift.interfaces.IObserver;
+import com.manish.powerlift.utils.ExUtils;
 
 import java.util.List;
 
-public class MainViewModel extends ViewModel {
+public class MainViewModel extends ViewModel implements IObserver {
     private static final String TAG = "MainViewModel";
     private MutableLiveData<List<Exercise>> mExercises;
+    private MutableLiveData<Boolean> isChecking = new MutableLiveData<>();
     List<Exercise> data;
+    private static String mDate;
+    private String tempDate;
     Repository repository;
 
     public void init(Context context, String date) {
-        repository = Repository.getInstance(context);
+        Log.v(TAG, "init()");
+        repository = Repository.getInstance(this, context);
         mExercises = new MutableLiveData<>();
-        data = repository.getData(date).getValue();
-        mExercises.setValue(data);
+        mDate = date;
+        setIsChecking(true);
+        repository.getData(mDate);
     }
+
 
     public LiveData<List<Exercise>> getExercises() {
         Log.v(TAG, "Update exercises");
@@ -31,16 +39,45 @@ public class MainViewModel extends ViewModel {
         return mExercises;
     }
 
-    public void setDate(String date) {
-        Log.v(TAG, "Date=" + date);
-        data = repository.getData(date).getValue();
-        if(data == null){
-            Log.v(TAG,"Data is null");
-        }
-        mExercises.setValue(data);
+    public MutableLiveData<Boolean> isChecking() {
+        return isChecking;
     }
 
-    public void updateDB(Exercise exercise) {
-        repository.insertData(exercise);
+    public void setIsChecking(boolean check) {
+        isChecking.setValue(check);
     }
+
+    public void setDate(String date) {
+        Log.v(TAG, "Selected Date=" + date + "  Today's date=" + mDate);
+        tempDate = date;
+        if (mDate.compareTo(date) < 0) {
+            Log.v(TAG, "Selected Date is future");
+            generateDataForFuture();
+            return;
+        }
+        repository.getData(date);
+    }
+
+    @Override
+    public void updateFutureExercises(List<Exercise> exercises) {
+        mExercises.setValue(ExUtils.getNextToDo(exercises));
+        setIsChecking(false);
+    }
+
+    @Override
+    public void updateExercises(List<Exercise> exercises) {
+        Log.v(TAG, "updateExercises: " + exercises);
+        if ((exercises == null || exercises.size() == 0) && mDate.equals(tempDate)) {
+            generateDataForFuture();
+        } else {
+            mExercises.setValue(exercises);
+            setIsChecking(false);
+        }
+    }
+
+    private void generateDataForFuture() {
+        Log.v(TAG, "generateDataForDate:");
+        repository.getLastExercises();
+    }
+
 }

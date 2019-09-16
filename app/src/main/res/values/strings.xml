@@ -5,4 +5,11 @@
     <string name="support_info">With support</string>
     <string name="satisfy_info">Satisfied</string>
     <string name="repeat_info">Will repeat next time.</string>
+    <string name="SQ">Squats</string>
+    <string name="BP">Bench Press</string>
+    <string name="BR">Barbell Rowing</string>
+    <string name="OP">Overhead Press</string>
+    <string name="DL">DeadLift</string>
+    <string name="swap">Change Set</string>
+    <string name="swap_desc">Click to change exercise</string>
 </resources>

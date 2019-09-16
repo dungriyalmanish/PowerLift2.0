@@ -1,23 +1,30 @@
 package com.manish.powerlift;
 
 import android.app.ProgressDialog;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.manish.powerlift.db.Exercise;
 import com.manish.powerlift.utils.DataConstants;
 import com.manish.powerlift.utils.ExUtils;
+
+import java.util.ArrayList;
 
 public class Today extends AppCompatActivity implements View.OnClickListener {
 
@@ -33,6 +40,8 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
     static String date;
     private TodayViewmodel tvm;
     ProgressDialog progressBar;
+    ArrayList<String> whtList;
+    ArrayList<Integer> exList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,16 +51,15 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
         setSupportActionBar(toolbar);
         exercise = new Exercise();
         tvm = ViewModelProviders.of(this).get(TodayViewmodel.class);
-        if (date == null) {
-            intent = getIntent();
-            date = intent.getStringExtra(DataConstants.DATE);
-
-        }
+        intent = getIntent();
+        date = intent.getStringExtra(DataConstants.DATE);
+        whtList = intent.getStringArrayListExtra(DataConstants.WEIGHTS);
+        exList = intent.getIntegerArrayListExtra(DataConstants.EXERCISES);
         tvm.init(this, date);
         toolbar.setSubtitle(date);
         init();
         setProgressBar();
-/*        tvm.getProgress().observe(this, new Observer<Boolean>() {
+        tvm.getProgress().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean aBoolean) {
                 if (aBoolean) {
@@ -61,7 +69,7 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
                     Toast.makeText(Today.this, "Database Updated !!", Toast.LENGTH_SHORT).show();
                 }
             }
-        });*/
+        });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
@@ -92,7 +100,7 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
         checks[2][2] = findViewById(R.id.t_ex3_repeat);
         editText[0] = findViewById(R.id.t_ex1_weight);
         editText[1] = findViewById(R.id.t_ex2_weight);
-        editText[2] = findViewById(R.id.t_ex2_weight);
+        editText[2] = findViewById(R.id.t_ex3_weight);
         btn[0] = findViewById(R.id.t_ex1_btn_done);
         btn[1] = findViewById(R.id.t_ex2_btn_done);
         btn[2] = findViewById(R.id.t_ex3_btn_done);
@@ -150,6 +158,7 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
         imgBtn[2][2].setOnClickListener(this);
         imgBtn[2][3].setOnClickListener(this);
         imgBtn[2][4].setOnClickListener(this);
+        updateExercises();
 
     }
 
@@ -266,7 +275,46 @@ public class Today extends AppCompatActivity implements View.OnClickListener {
         }
         exercise.setPart_a(parts[0]);
         exercise.setPart_b(parts[1]);
-        tvm.updateDB(exercise);
+        tvm.updateDB(ex, exercise);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_today, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.swap:
+                if (exList.contains(DataConstants.OP_EX)) {
+                    exList.clear();
+                    exList.add(DataConstants.SQ_EX);
+                    exList.add(DataConstants.BP_EX);
+                    exList.add(DataConstants.BR_EX);
+                } else {
+                    exList.clear();
+                    exList.add(DataConstants.SQ_EX);
+                    exList.add(DataConstants.OP_EX);
+                    exList.add(DataConstants.DL_EX);
+                }
+                updateExercises();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void updateExercises() {
+        for (int i = 0; i < exList.size(); i++) {
+            ex[i].setText(ExUtils.getExercise(exList.get(i)));
+        }
+        for (int i = 0; i < whtList.size(); i++) {
+            editText[i].setText(whtList.get(i));
+        }
+        Toast.makeText(this, "Set Changed", Toast.LENGTH_SHORT).show();
     }
 }
 

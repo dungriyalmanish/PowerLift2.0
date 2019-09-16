@@ -7,7 +7,6 @@ public class DataConstants {
     public final static int DL_EX = 3;
     public final static int BP_EX = 4;
     public final static int BR_EX = 5;
-    public static final String ND = "ND";
     public static final String SQ = "Squats";
     public static final String BP = "Bench Press";
     public static final String BR = "Barbell Rowing";
@@ -24,4 +23,7 @@ public class DataConstants {
     public static final int EX1 = 0;
     public static final int EX2 = 1;
     public static final int EX3 = 2;
+    public static final String SHARED_PREF = "pl_shared_pref";
+    public static final String EXERCISES = "exercises";
+    public static final String WEIGHTS = "weights";
 }

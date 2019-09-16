@@ -1,5 +1,6 @@
 package com.manish.powerlift;
 
+import android.app.ProgressDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -10,17 +11,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CalendarView;
+import android.widget.Toast;
 
 import com.manish.powerlift.adapter.MainAdapter;
 import com.manish.powerlift.db.Exercise;
 import com.manish.powerlift.utils.DataConstants;
 import com.manish.powerlift.utils.ExUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements CalendarView.OnDateChangeListener {
@@ -29,9 +31,10 @@ public class MainActivity extends AppCompatActivity implements CalendarView.OnDa
     MainViewModel mainViewModel;
     RecyclerView recyclerView;
     MainAdapter mainAdapter;
-    String mDate;
+    String mDate, selectedDate;
     List<Exercise> lExercises;
     CalendarView calendarView;
+    private ProgressDialog progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,31 +43,64 @@ public class MainActivity extends AppCompatActivity implements CalendarView.OnDa
         Toolbar toolbar = findViewById(R.id.toolbar);
         calendarView = findViewById(R.id.calendarView);
         calendarView.setOnDateChangeListener(this);
-        mDate = ExUtils.getDateString(calendarView.getDate());
+        mDate = selectedDate = ExUtils.getDateString(calendarView.getDate());
         setSupportActionBar(toolbar);
+        setProgressBar();
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         mainViewModel.init(this, mDate);
         mainViewModel.getExercises().observe(this, new Observer<List<Exercise>>() {
             @Override
             public void onChanged(@Nullable List<Exercise> exercises) {
-//                Log.v(TAG, "Update observer with list" + exercises.toString());
                 lExercises = exercises;
-                if (lExercises!=null && lExercises.size() == 0) {
+                if (lExercises != null && lExercises.size() == 0) {
                     lExercises.add(new Exercise(-1));
                 }
                 mainAdapter.updateData(lExercises);
             }
         });
+
+        mainViewModel.isChecking().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                if (aBoolean) {
+                    progressBar.show();
+                } else {
+                    progressBar.hide();
+                }
+            }
+        });
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (mDate.compareTo(selectedDate) < 0) {
+                    Toast.makeText(MainActivity.this, "You can't edit future :(", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent(MainActivity.this, Today.class);
-                intent.putExtra(DataConstants.DATE, ExUtils.getDateString(calendarView.getDate()));
+                ArrayList<Integer> exList = new ArrayList<>();
+                ArrayList<String> whtList = new ArrayList<>();
+                if (lExercises != null && lExercises.size() == 3) {
+                    for (Exercise e : lExercises) {
+                        exList.add(e.getType());
+                        whtList.add(ExUtils.getWeights(e.getPart_a(), e.getPart_b()));
+
+                    }
+                } else {
+                    exList = ExUtils.basicExercise();
+                    whtList = ExUtils.basicWeights();
+                }
+                intent.putExtra(DataConstants.EXERCISES, exList);
+                intent.putExtra(DataConstants.WEIGHTS, whtList);
+                intent.putExtra(DataConstants.DATE, selectedDate);
+
                 startActivity(intent);
             }
         });
+
         initRecyclerView();
+
     }
 
     private void initRecyclerView() {
@@ -75,11 +111,17 @@ public class MainActivity extends AppCompatActivity implements CalendarView.OnDa
         recyclerView.setAdapter(mainAdapter);
     }
 
+    private void setProgressBar() {
+        progressBar = new ProgressDialog(this);
+        progressBar.setTitle("Message");
+        progressBar.setMessage("Updating Database");
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        // getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -100,6 +142,10 @@ public class MainActivity extends AppCompatActivity implements CalendarView.OnDa
 
     @Override
     public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-        mainViewModel.setDate(ExUtils.getDateString(dayOfMonth, month, year));
+        String date = ExUtils.getDateString(dayOfMonth, month + 1, year);
+        selectedDate = date;
+        mainViewModel.setDate(date);
+
+
     }
 }

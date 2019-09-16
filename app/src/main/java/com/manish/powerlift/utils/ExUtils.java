@@ -139,4 +139,22 @@ public class ExUtils {
         }
         return retList;
     }
+
+    public static ArrayList<Integer> basicExercise() {
+        //hardcoded
+        ArrayList<Integer> arrayList = new ArrayList<>();
+        arrayList.add(DataConstants.SQ_EX);
+        arrayList.add(DataConstants.OP_EX);
+        arrayList.add(DataConstants.DL_EX);
+        return arrayList;
+    }
+
+    public static ArrayList<String> basicWeights() {
+//hardcoded
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("10kg");
+        arrayList.add("10kg");
+        arrayList.add("10kg");
+        return arrayList;
+    }
 }
